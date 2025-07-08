@@ -43,7 +43,7 @@ exports.deleteImage = async (req, res) => {
     const { galleryId, public_id } = req.body;
 
     console.log("Gallery id --> ", galleryId);
-    
+    console.log("Public id --> ", public_id);
 
     if (!galleryId || !public_id) {
       return res
@@ -52,7 +52,11 @@ exports.deleteImage = async (req, res) => {
     }
 
     // Delete from Cloudinary
-    const result = await cloudinary.uploader.destroy(public_id);
+    const result = await cloudinary.uploader.destroy(public_id, {
+      resource_type: "image",
+    });
+
+    console.log("Cloudinary delete result:", result);
 
     if (result.result !== "ok" && result.result !== "not found") {
       return res
@@ -69,6 +73,14 @@ exports.deleteImage = async (req, res) => {
 
     if (!updatedGallery) {
       return res.status(404).json({ error: "Gallery not found." });
+    }
+
+    // If no images left, delete the gallery document
+    if (updatedGallery.images.length === 0) {
+      await Images.findByIdAndDelete(galleryId);
+      return res.status(200).json({
+        message: "Image deleted and empty gallery removed.",
+      });
     }
 
     res.status(200).json({
