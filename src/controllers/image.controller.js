@@ -92,3 +92,42 @@ exports.deleteImage = async (req, res) => {
     res.status(500).json({ error: "Server error while deleting image." });
   }
 };
+
+// Delete an entire gallery
+exports.deleteGallery = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Gallery ID is required." });
+    }
+
+    // Find the gallery
+    const gallery = await Images.findById(id);
+    
+    if (!gallery) {
+      return res.status(404).json({ error: "Gallery not found." });
+    }
+
+    // Delete all images from Cloudinary
+    if (gallery.images && gallery.images.length > 0) {
+      for (const image of gallery.images) {
+        if (image.public_id) {
+          await cloudinary.uploader.destroy(image.public_id, {
+            resource_type: "image",
+          });
+        }
+      }
+    }
+
+    // Delete the gallery document
+    await Images.findByIdAndDelete(id);
+
+    res.status(200).json({
+      message: "Gallery deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Delete gallery error:", error);
+    res.status(500).json({ error: "Server error while deleting gallery." });
+  }
+};
