@@ -7,7 +7,8 @@ const imageRoutes = require("./routes/imageRoutes");
 
 const origins = [
   process.env.LOCAL_ORIGIN,
-  process.env.PRODUCTION_ORIGIN
+  process.env.PRODUCTION_ORIGIN,
+  process.env.ADMIN_ORIGIN,
 ]
 
 const corsOptions = {
